@@ -1,0 +1,117 @@
+/**
+ * Fallback EN→ES dictionary used when no AI provider is configured. Covers
+ * the app's own UI chrome (nav, buttons, common labels) with exact-match
+ * lookups — it does not attempt to translate arbitrary/dynamic content like
+ * product titles or AI-generated copy. That's the honest boundary of what
+ * demo mode can do without a real translation model.
+ */
+export const DEMO_ES_DICTIONARY: Record<string, string> = {
+  Dashboard: "Panel",
+  "Product Radar": "Radar de Productos",
+  "Winning Products": "Productos Ganadores",
+  Trends: "Tendencias",
+  "Ad Intelligence": "Inteligencia de Anuncios",
+  Suppliers: "Proveedores",
+  Competitors: "Competidores",
+  "Creative Studio": "Estudio Creativo",
+  "Brand Builder": "Constructor de Marca",
+  "Store Builder": "Constructor de Tienda",
+  Analytics: "Analítica",
+  Watchlist: "Lista de Seguimiento",
+  "AI Agent": "Agente IA",
+  Settings: "Configuración",
+  soon: "pronto",
+
+  "Sign in": "Iniciar sesión",
+  "Sign out": "Cerrar sesión",
+  "Sign up": "Registrarse",
+  "Create account": "Crear cuenta",
+  "Welcome back": "Bienvenido de nuevo",
+  Email: "Correo electrónico",
+  Password: "Contraseña",
+  "Continue with Google": "Continuar con Google",
+
+  Save: "Guardar",
+  Watching: "Siguiendo",
+  "View analysis": "Ver análisis",
+  "View all": "Ver todo",
+  Filters: "Filtros",
+  "Search products...": "Buscar productos...",
+  "All categories": "Todas las categorías",
+  "All sources": "Todas las fuentes",
+  "Sort by": "Ordenar por",
+
+  Cost: "Costo",
+  Sell: "Venta",
+  Margin: "Margen",
+  Competition: "Competencia",
+  Saturation: "Saturación",
+  Trend: "Tendencia",
+  Growth: "Crecimiento",
+  Low: "Baja",
+  Medium: "Media",
+  High: "Alta",
+  Source: "Fuente",
+  Category: "Categoría",
+  Reviews: "Reseñas",
+  "Shipping time": "Tiempo de envío",
+  "Sourcing cost": "Costo de abastecimiento",
+  "Sell price": "Precio de venta",
+
+  "Today's Top Product": "Producto Destacado de Hoy",
+  "Top 5 Winners": "Los 5 Mejores Ganadores",
+  "Emerging Opportunities": "Oportunidades Emergentes",
+  "Trend Alerts": "Alertas de Tendencia",
+  "Recently Discovered": "Descubiertos Recientemente",
+  "My Watchlist": "Mi Lista de Seguimiento",
+  "Recent AI Actions": "Acciones Recientes de IA",
+  "Store Performance": "Rendimiento de la Tienda",
+  "Campaign Performance": "Rendimiento de Campaña",
+  "Quick actions": "Acciones rápidas",
+  "Find Winners": "Buscar Ganadores",
+  "Analyze a Product": "Analizar un Producto",
+  "Create Brand": "Crear Marca",
+  "Generate Ads": "Generar Anuncios",
+  "Build Store": "Construir Tienda",
+
+  "Analyze With AI": "Analizar con IA",
+  "Re-analyze with AI": "Reanalizar con IA",
+  "Find Suppliers": "Buscar Proveedores",
+  "Generate Brand": "Generar Marca",
+  "AI Product Analysis": "Análisis de Producto con IA",
+  Overview: "Resumen",
+  "Why it's trending": "Por qué está en tendencia",
+  "Consumer problem": "Problema del consumidor",
+  "Target audience": "Público objetivo",
+  "Buyer psychology": "Psicología del comprador",
+  "Market maturity": "Madurez del mercado",
+  Risks: "Riesgos",
+  "Launch recommendation": "Recomendación de lanzamiento",
+
+  "Profitability Calculator": "Calculadora de Rentabilidad",
+  Conservative: "Conservador",
+  Base: "Base",
+  Aggressive: "Agresivo",
+  Revenue: "Ingresos",
+  "Gross profit": "Beneficio bruto",
+  "Net profit": "Beneficio neto",
+  "Break-even": "Punto de equilibrio",
+
+  "Trend History": "Historial de Tendencia",
+  Orders: "Pedidos",
+  Views: "Vistas",
+  Price: "Precio",
+  "Supplier Options": "Opciones de Proveedores",
+  "Advertising Activity": "Actividad Publicitaria",
+  "Related Products": "Productos Relacionados",
+
+  "Back to Product Radar": "Volver al Radar de Productos",
+  "products found": "productos encontrados",
+  "No products match these filters.": "Ningún producto coincide con estos filtros.",
+
+  "Coming soon": "Próximamente",
+};
+
+export function translateWithDictionary(texts: string[]): string[] {
+  return texts.map((text) => DEMO_ES_DICTIONARY[text.trim()] ?? text);
+}

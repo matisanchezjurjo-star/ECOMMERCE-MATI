@@ -1,0 +1,1077 @@
+// EcomHunter AI — Prisma schema
+// Autonomous ecommerce intelligence & execution platform.
+// See /docs/ARCHITECTURE.md for the system overview.
+
+generator client {
+  provider = "prisma-client"
+  output   = "../src/generated/prisma"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+// ============================================================================
+// ENUMS
+// ============================================================================
+
+enum Role {
+  OWNER
+  ADMIN
+  MEMBER
+}
+
+/// How confident we are in a piece of data. Every metric that can be
+/// estimated or AI-inferred must carry one of these — never presented as
+/// verified fact when it isn't.
+enum DataConfidence {
+  REAL // Sourced directly from an official API / verified feed
+  ESTIMATED // Derived heuristically from real inputs (e.g. price × est. margin)
+  AI_INFERRED // Produced by an LLM with no verifiable source
+  DEMO // Synthetic seed data used in demo mode
+}
+
+/// How a data source is actually wired up. Never claim "Official API" for
+/// something that is really scraping.
+enum IntegrationType {
+  OFFICIAL_API
+  PARTNER_API
+  PUBLIC_FEED
+  SEARCH_API
+  BROWSER_AUTOMATION
+  SCRAPING
+  MANUAL_IMPORT
+  DEMO_MOCK
+}
+
+enum IntegrationStatus {
+  NOT_CONFIGURED
+  DEMO_MODE
+  CONNECTED
+  ERROR
+  DISABLED
+}
+
+enum ProductStatus {
+  DISCOVERED
+  ANALYZING
+  ANALYZED
+  VALIDATED
+  SELECTED
+  BRANDED
+  LAUNCHED
+  ARCHIVED
+  REJECTED
+}
+
+enum WinnerClassification {
+  EXTREME_OPPORTUNITY // 90-100
+  STRONG_WINNER // 80-89
+  TEST_PRODUCT // 70-79
+  HIGH_RISK // 60-69
+  REJECT // <60
+}
+
+enum TrendDirection {
+  RISING_FAST
+  RISING
+  STABLE
+  DECLINING
+  DECLINING_FAST
+  NEW
+}
+
+enum RiskTolerance {
+  CONSERVATIVE
+  BALANCED
+  AGGRESSIVE
+}
+
+enum BusinessModel {
+  DROPSHIPPING
+  STOCK
+  PRIVATE_LABEL
+  HYBRID
+}
+
+enum StorePlatform {
+  SHOPIFY
+  TIENDANUBE
+  UNDECIDED
+}
+
+enum AIProviderType {
+  OPENAI
+  ANTHROPIC
+  GOOGLE
+  DEMO
+}
+
+enum AdPlatform {
+  META
+  TIKTOK
+  GOOGLE
+  PINTEREST
+  YOUTUBE
+  SNAPCHAT
+}
+
+enum CreativeType {
+  TIKTOK_SCRIPT
+  INSTAGRAM_REEL_SCRIPT
+  META_VIDEO_AD
+  UGC_SCRIPT
+  YOUTUBE_SHORTS_SCRIPT
+  VIDEO_PROMPT
+  IMAGE_PROMPT
+  AD_COPY
+}
+
+enum VideoPromptEngine {
+  SORA
+  VEO
+  RUNWAY
+  KLING
+  PIKA
+  CAPCUT
+}
+
+enum GeneratedAssetType {
+  BRAND_KIT
+  LANDING_PAGE
+  CAMPAIGN_PLAN
+  PROFITABILITY_MODEL
+  TEST_SIMULATION
+  STORE_STRUCTURE
+  MARKETING_STRATEGY
+  COMPETITOR_REPORT
+  SUPPLIER_COMPARISON
+}
+
+enum JobType {
+  DISCOVER_PRODUCTS
+  UPDATE_METRICS
+  CALCULATE_SCORES
+  ANALYZE_TRENDS
+  GENERATE_DAILY_REPORT
+  MONITOR_WATCHLIST
+  MONITOR_ADS
+  REFRESH_SUPPLIERS
+  DETECT_OPPORTUNITIES
+  SEND_ALERTS
+}
+
+enum JobStatus {
+  QUEUED
+  RUNNING
+  SUCCEEDED
+  FAILED
+  PARTIAL
+}
+
+enum AlertChannel {
+  IN_APP
+  EMAIL
+}
+
+enum AlertRuleType {
+  WINNER_SCORE_ABOVE
+  TREND_GROWTH_ABOVE
+  SUPPLIER_COST_DROP
+  COMPETITION_RISK
+  NEW_TOP_10
+}
+
+enum SupplierPlatform {
+  ALIBABA
+  MADE_IN_CHINA
+  ALIBABA_1688
+  ALIEXPRESS
+  CJ_DROPSHIPPING
+  OTHER
+}
+
+// ============================================================================
+// IDENTITY & TENANCY
+// ============================================================================
+
+model Organization {
+  id        String   @id @default(cuid())
+  name      String
+  slug      String   @unique
+  plan      String   @default("free")
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  users         User[]
+  settings      UserSettings[]
+  products      Product[]
+  suppliers     Supplier[]
+  competitors   Competitor[]
+  advertisements Advertisement[]
+  brands        Brand[]
+  stores        Store[]
+  campaigns     Campaign[]
+  watchlist     WatchlistItem[]
+  alerts        AlertRule[]
+  aiAnalyses    AIAnalysis[]
+  generatedAssets GeneratedAsset[]
+  integrations  Integration[]
+  jobs          Job[]
+  auditLogs     AuditLog[]
+  aiUsageEvents AIUsageEvent[]
+  agentMessages AgentMessage[]
+
+  @@index([slug])
+}
+
+model User {
+  id             String    @id @default(cuid())
+  name           String?
+  email          String    @unique
+  emailVerified  DateTime?
+  image          String?
+  passwordHash   String?
+  role           Role      @default(OWNER)
+  organizationId String?
+  createdAt      DateTime  @default(now())
+  updatedAt      DateTime  @updatedAt
+
+  organization Organization? @relation(fields: [organizationId], references: [id], onDelete: SetNull)
+  accounts     Account[]
+  sessions     Session[]
+  settings     UserSettings?
+  watchlist    WatchlistItem[]
+  alertRules   AlertRule[]
+  auditLogs    AuditLog[]
+  aiUsageEvents AIUsageEvent[]
+  agentMessages AgentMessage[]
+
+  @@index([organizationId])
+}
+
+/// Auth.js (NextAuth v5) adapter models — email/password (Credentials) + Google OAuth.
+model Account {
+  userId            String
+  type              String
+  provider          String
+  providerAccountId String
+  refresh_token     String? @db.Text
+  access_token      String? @db.Text
+  expires_at        Int?
+  token_type        String?
+  scope             String?
+  id_token          String? @db.Text
+  session_state     String?
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@id([provider, providerAccountId])
+  @@index([userId])
+}
+
+model Session {
+  sessionToken String   @unique
+  userId       String
+  expires      DateTime
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+}
+
+model VerificationToken {
+  identifier String
+  token      String
+  expires    DateTime
+
+  @@id([identifier, token])
+}
+
+/// Agent memory — persisted preferences so the AI Agent never re-asks.
+model UserSettings {
+  id                  String   @id @default(cuid())
+  userId              String   @unique
+  organizationId      String
+  targetCountries     String[] @default([])
+  preferredCategories String[] @default([])
+  maxSupplierCost     Decimal? @db.Decimal(10, 2)
+  minMarginPercent    Decimal? @db.Decimal(5, 2)
+  preferredPlatforms  AdPlatform[] @default([])
+  riskTolerance       RiskTolerance @default(BALANCED)
+  businessModel       BusinessModel @default(DROPSHIPPING)
+  adBudgetMonthly     Decimal? @db.Decimal(10, 2)
+  storePlatform       StorePlatform @default(UNDECIDED)
+  desiredSellingPrice Decimal? @db.Decimal(10, 2)
+  aiProvider          AIProviderType @default(ANTHROPIC)
+  aiModel             String?  @default("claude-sonnet-5")
+  onboardingCompletedAt DateTime?
+  theme               String   @default("system")
+  createdAt           DateTime @default(now())
+  updatedAt           DateTime @updatedAt
+
+  user         User         @relation(fields: [userId], references: [id], onDelete: Cascade)
+  organization Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+
+  @@index([organizationId])
+}
+
+// ============================================================================
+// PRODUCT DISCOVERY
+// ============================================================================
+
+/// One row per adapter (Amazon, MercadoLibre, TikTok, ...). Config + status
+/// live here so the admin panel can enable/disable/configure each source.
+model ProductSource {
+  id              String            @id @default(cuid())
+  key             String            @unique // e.g. "mercadolibre", "aliexpress"
+  name            String
+  category        String // marketplace | social | ads | search | supplier
+  integrationType IntegrationType
+  status          IntegrationStatus @default(NOT_CONFIGURED)
+  enabled         Boolean           @default(true)
+  syncFrequencyMinutes Int          @default(360)
+  lastSyncAt      DateTime?
+  lastSuccessAt   DateTime?
+  lastErrorAt     DateTime?
+  lastError       String?
+  config          Json?             // non-secret config (rate limits, regions...)
+  createdAt       DateTime          @default(now())
+  updatedAt       DateTime          @updatedAt
+
+  products  Product[]
+  jobs      Job[]
+
+  @@index([status])
+}
+
+/// The normalized product model (spec section 7). Every discovered product,
+/// regardless of source, is mapped into this shape.
+model Product {
+  id          String   @id @default(cuid())
+  organizationId String
+  title       String
+  description String?  @db.Text
+  category    String
+  subcategory String?
+
+  sourceId    String?
+  source      ProductSource? @relation(fields: [sourceId], references: [id], onDelete: SetNull)
+  sourceKey   String   // denormalized for fast filtering even if source row is deleted
+  sourceUrl   String?
+
+  supplierName String?
+  supplierUrl  String?
+
+  images    String[] @default([])
+  videoUrls String[] @default([])
+
+  cost                 Decimal? @db.Decimal(10, 2)
+  currency             String   @default("USD")
+  shippingCost         Decimal? @db.Decimal(10, 2)
+  moq                  Int?
+  estimatedDeliveryDays Int?
+  sellingPriceEstimate Decimal? @db.Decimal(10, 2)
+  marketplacePrice     Decimal? @db.Decimal(10, 2)
+
+  reviewCount     Int?
+  averageRating   Decimal? @db.Decimal(3, 2)
+  unitsSold       Int?
+  orders          Int?
+
+  engagement      Int?     // composite social engagement count
+  likes           Int?
+  comments        Int?
+  shares          Int?
+  views           Int?
+
+  adCount         Int?
+  advertiserCount Int?
+
+  searchVolume    Int?
+  searchGrowthPercent Decimal? @db.Decimal(7, 2)
+  competitionScore Decimal? @db.Decimal(5, 2)
+  saturationScore  Decimal? @db.Decimal(5, 2)
+  trendScore       Decimal? @db.Decimal(5, 2)
+
+  firstSeenAt DateTime @default(now())
+  lastSeenAt  DateTime @default(now())
+
+  country       String?
+  targetMarkets String[] @default([])
+
+  supplierReliability      Decimal? @db.Decimal(5, 2)
+  brandPotential           Decimal? @db.Decimal(5, 2)
+  viralPotential           Decimal? @db.Decimal(5, 2)
+  problemSolvingPotential  Decimal? @db.Decimal(5, 2)
+  impulsePurchasePotential Decimal? @db.Decimal(5, 2)
+  marginPotential          Decimal? @db.Decimal(5, 2)
+  returnRisk               Decimal? @db.Decimal(5, 2)
+  legalRisk                Decimal? @db.Decimal(5, 2)
+  seasonalityRisk          Decimal? @db.Decimal(5, 2)
+
+  // Winner Score engine output (see lib/scoring)
+  winnerScore          Decimal? @db.Decimal(5, 2)
+  winnerClassification WinnerClassification?
+  winnerConfidence     Decimal? @db.Decimal(5, 2)
+  winnerPositives      String[] @default([])
+  winnerNegatives      String[] @default([])
+  winnerRisks          String[] @default([])
+  winnerRecommendation String?  @db.Text
+  winnerScoredAt       DateTime?
+
+  dataConfidence DataConfidence @default(ESTIMATED)
+  status         ProductStatus  @default(DISCOVERED)
+  trendDirection TrendDirection @default(NEW)
+  isDemoData     Boolean        @default(false)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  organization    Organization       @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  snapshots       ProductSnapshot[]
+  productSuppliers ProductSupplier[]
+  competitors     Competitor[]
+  advertisements  Advertisement[]
+  watchlistItems  WatchlistItem[]
+  aiAnalyses      AIAnalysis[]
+  generatedAssets GeneratedAsset[]
+  storeProducts   StoreProduct[]
+  brands          Brand[]
+
+  @@index([organizationId])
+  @@index([organizationId, winnerScore])
+  @@index([organizationId, status])
+  @@index([organizationId, category])
+  @@index([organizationId, createdAt])
+  @@index([sourceKey])
+  @@index([trendDirection])
+}
+
+/// Historical time-series so we can compute velocity/acceleration instead of
+/// just showing a current snapshot.
+model ProductSnapshot {
+  id        String   @id @default(cuid())
+  productId String
+  timestamp DateTime @default(now())
+
+  price       Decimal? @db.Decimal(10, 2)
+  orders      Int?
+  reviews     Int?
+  views       Int?
+  likes       Int?
+  comments    Int?
+  shares      Int?
+  adsRunning  Int?
+  advertisers Int?
+  searchVolume Int?
+  ranking     Int?
+  trendScore  Decimal? @db.Decimal(5, 2)
+  winnerScore Decimal? @db.Decimal(5, 2)
+
+  dataConfidence DataConfidence @default(ESTIMATED)
+
+  product Product @relation(fields: [productId], references: [id], onDelete: Cascade)
+
+  @@index([productId, timestamp])
+}
+
+// ============================================================================
+// SUPPLIERS
+// ============================================================================
+
+model Supplier {
+  id             String   @id @default(cuid())
+  organizationId String
+  name           String
+  platform       SupplierPlatform
+  url            String?
+  country        String?
+
+  rating              Decimal? @db.Decimal(3, 2)
+  yearsActive         Int?
+  responseRatePercent Decimal? @db.Decimal(5, 2)
+  certifications      String[] @default([])
+  tradeAssurance      Boolean  @default(false)
+  supportsDropshipping Boolean @default(false)
+  supportsPrivateLabel Boolean @default(false)
+  supportsCustomization Boolean @default(false)
+
+  supplierScore Decimal? @db.Decimal(5, 2)
+  dataConfidence DataConfidence @default(ESTIMATED)
+  isDemoData     Boolean  @default(false)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  organization Organization      @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  products     ProductSupplier[]
+
+  @@index([organizationId])
+  @@index([platform])
+}
+
+/// Join table: a product can be sourced from multiple suppliers, each with
+/// its own price/MOQ/lead time.
+model ProductSupplier {
+  id         String  @id @default(cuid())
+  productId  String
+  supplierId String
+
+  price             Decimal? @db.Decimal(10, 2)
+  moq               Int?
+  leadTimeDays      Int?
+  shippingCost      Decimal? @db.Decimal(10, 2)
+  badge             String? // BEST_PRICE | BEST_QUALITY | BEST_FOR_TESTING | BEST_FOR_SCALING
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  product  Product  @relation(fields: [productId], references: [id], onDelete: Cascade)
+  supplier Supplier @relation(fields: [supplierId], references: [id], onDelete: Cascade)
+
+  @@unique([productId, supplierId])
+  @@index([productId])
+  @@index([supplierId])
+}
+
+// ============================================================================
+// COMPETITOR INTELLIGENCE
+// ============================================================================
+
+model Competitor {
+  id             String  @id @default(cuid())
+  organizationId String
+  productId      String?
+
+  name    String
+  website String?
+  price   Decimal? @db.Decimal(10, 2)
+  offer   String?  @db.Text
+  bundles String[] @default([])
+  discounts String[] @default([])
+
+  socialLinks Json? // { instagram, tiktok, facebook }
+  estimatedTraffic Int?
+  positioning String? @db.Text
+  marketingAngle String? @db.Text
+  reviewScore Decimal? @db.Decimal(3, 2)
+  weaknesses  String[] @default([])
+  complaints  String[] @default([])
+
+  opportunityScore Decimal? @db.Decimal(5, 2)
+  dataConfidence   DataConfidence @default(AI_INFERRED)
+  isDemoData       Boolean @default(false)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  organization Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  product      Product?     @relation(fields: [productId], references: [id], onDelete: SetNull)
+  snapshots    CompetitorSnapshot[]
+
+  @@index([organizationId])
+  @@index([productId])
+}
+
+model CompetitorSnapshot {
+  id           String   @id @default(cuid())
+  competitorId String
+  timestamp    DateTime @default(now())
+
+  price            Decimal? @db.Decimal(10, 2)
+  estimatedTraffic Int?
+  adCount          Int?
+  reviewScore      Decimal? @db.Decimal(3, 2)
+
+  competitor Competitor @relation(fields: [competitorId], references: [id], onDelete: Cascade)
+
+  @@index([competitorId, timestamp])
+}
+
+// ============================================================================
+// AD INTELLIGENCE
+// ============================================================================
+
+model Advertisement {
+  id             String     @id @default(cuid())
+  organizationId String
+  productId      String?
+
+  platform     AdPlatform
+  advertiser   String
+  creativeUrl  String?
+  thumbnailUrl String?
+  copy         String?    @db.Text
+  cta          String?
+  landingPageUrl String?
+
+  firstSeenAt DateTime @default(now())
+  lastSeenAt  DateTime @default(now())
+  daysActive  Int      @default(0)
+
+  estimatedEngagement Int?
+  views    Int?
+  likes    Int?
+  comments Int?
+  shares   Int?
+
+  country  String?
+  category String?
+
+  dataConfidence DataConfidence @default(ESTIMATED)
+  isDemoData     Boolean @default(false)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  organization Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  product      Product?     @relation(fields: [productId], references: [id], onDelete: SetNull)
+
+  @@index([organizationId])
+  @@index([productId])
+  @@index([platform])
+  @@index([lastSeenAt])
+}
+
+// ============================================================================
+// CREATIVE STUDIO / AI AD STRATEGIST
+// ============================================================================
+
+model Creative {
+  id        String       @id @default(cuid())
+  productId String?
+  type      CreativeType
+  engine    VideoPromptEngine?
+
+  title    String
+  durationSeconds Int?
+
+  hook             String? @db.Text
+  script           Json?  // structured scenes: { scene, voiceover, onScreenText, shotDescription }[]
+  editingInstructions String? @db.Text
+  musicDirection   String? @db.Text
+  prompt           String? @db.Text // ready-to-paste generator prompt
+  cta              String? @db.Text
+
+  aiProvider AIProviderType?
+  aiModel    String?
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([productId])
+}
+
+model MarketingStrategy {
+  id        String  @id @default(cuid())
+  productId String
+
+  angles      Json? // string[]
+  personas    Json?
+  painPoints  String[] @default([])
+  desires     String[] @default([])
+  objections  String[] @default([])
+  hooks       String[] @default([])
+  offers      Json?
+  pricingStrategy String? @db.Text
+  testingMatrix Json?
+  retargetingStrategy String? @db.Text
+  scalingStrategy String? @db.Text
+
+  aiProvider AIProviderType?
+  aiModel    String?
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([productId])
+}
+
+// ============================================================================
+// BRAND BUILDER
+// ============================================================================
+
+model Brand {
+  id             String  @id @default(cuid())
+  organizationId String
+  productId      String?
+
+  name         String
+  tagline      String?
+  positioning  String? @db.Text
+  usp          String? @db.Text
+  story        String? @db.Text
+  toneOfVoice  String?
+  colorPalette Json?   // { primary, secondary, accent, neutral }[]
+  typography   Json?   // { heading, body }
+  logoConcepts Json?   // AI logo concept descriptions/prompts
+  domainSuggestions String[] @default([])
+  socialHandles Json?
+  packagingIdeas String[] @default([])
+
+  memorabilityScore Decimal? @db.Decimal(5, 2)
+  premiumPerceptionScore Decimal? @db.Decimal(5, 2)
+  trademarkRiskScore Decimal? @db.Decimal(5, 2)
+  domainPotentialScore Decimal? @db.Decimal(5, 2)
+  overallScore Decimal? @db.Decimal(5, 2)
+
+  aiProvider AIProviderType?
+  aiModel    String?
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  organization Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  product      Product?     @relation(fields: [productId], references: [id], onDelete: SetNull)
+  stores       Store[]
+
+  @@index([organizationId])
+  @@index([productId])
+}
+
+// ============================================================================
+// STORE BUILDER
+// ============================================================================
+
+model Store {
+  id             String        @id @default(cuid())
+  organizationId String
+  brandId        String?
+
+  name     String
+  platform StorePlatform
+  platformRecommendationReason String? @db.Text
+  domain   String?
+
+  status String @default("draft") // draft | structure_generated | connected | published
+
+  navigation Json?
+  policies   Json?
+  seoDefaults Json?
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  organization  Organization    @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  brand         Brand?          @relation(fields: [brandId], references: [id], onDelete: SetNull)
+  storeProducts StoreProduct[]
+  integrations  Integration[]
+
+  @@index([organizationId])
+}
+
+model StoreProduct {
+  id        String  @id @default(cuid())
+  storeId   String
+  productId String?
+
+  title       String
+  description String? @db.Text
+  price       Decimal? @db.Decimal(10, 2)
+  compareAtPrice Decimal? @db.Decimal(10, 2)
+  variants    Json?
+  images      String[] @default([])
+  seoTitle    String?
+  seoDescription String?
+
+  // Set only once the platform API confirms creation — never optimistic.
+  externalId       String?
+  externalStatus   String? // e.g. "active" once confirmed by Shopify/Tiendanube
+  publishedAt      DateTime?
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  store   Store    @relation(fields: [storeId], references: [id], onDelete: Cascade)
+  product Product? @relation(fields: [productId], references: [id], onDelete: SetNull)
+
+  @@index([storeId])
+  @@index([productId])
+}
+
+// ============================================================================
+// CAMPAIGN BUILDER
+// ============================================================================
+
+model Campaign {
+  id             String   @id @default(cuid())
+  organizationId String
+  productId      String?
+
+  name     String
+  platform AdPlatform
+  objective String?
+
+  testBudget       Decimal? @db.Decimal(10, 2)
+  expectedCpa      Decimal? @db.Decimal(10, 2)
+  breakEvenCpa     Decimal? @db.Decimal(10, 2)
+  targetRoas       Decimal? @db.Decimal(6, 2)
+  breakEvenRoas    Decimal? @db.Decimal(6, 2)
+  testDurationDays Int?
+  kpis             Json?
+  scalingCriteria  String? @db.Text
+  killCriteria     String? @db.Text
+
+  status String @default("draft") // draft | ready | active | paused | ended
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  organization Organization        @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  creatives    CampaignCreative[]
+  adSets       CampaignAdSet[]
+
+  @@index([organizationId])
+  @@index([productId])
+}
+
+model CampaignAdSet {
+  id         String  @id @default(cuid())
+  campaignId String
+  name       String
+  audience   Json?
+  budget     Decimal? @db.Decimal(10, 2)
+  optimizationEvent String?
+
+  campaign Campaign @relation(fields: [campaignId], references: [id], onDelete: Cascade)
+
+  @@index([campaignId])
+}
+
+model CampaignCreative {
+  id         String  @id @default(cuid())
+  campaignId String
+  angle      String?
+  hook       String?
+  format     String?
+  audience   String?
+  cta        String?
+  offer      String?
+
+  campaign Campaign @relation(fields: [campaignId], references: [id], onDelete: Cascade)
+
+  @@index([campaignId])
+}
+
+// ============================================================================
+// WATCHLIST & ALERTS
+// ============================================================================
+
+model WatchlistItem {
+  id             String   @id @default(cuid())
+  organizationId String
+  userId         String
+  productId      String
+  notes          String?  @db.Text
+  createdAt      DateTime @default(now())
+
+  organization Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  user         User         @relation(fields: [userId], references: [id], onDelete: Cascade)
+  product      Product      @relation(fields: [productId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, productId])
+  @@index([organizationId])
+  @@index([productId])
+}
+
+model AlertRule {
+  id             String        @id @default(cuid())
+  organizationId String
+  userId         String
+  type           AlertRuleType
+  thresholdValue Decimal?      @db.Decimal(10, 2)
+  productId      String?       // optional: scope rule to one product
+  channels       AlertChannel[] @default([IN_APP])
+  enabled        Boolean       @default(true)
+  createdAt      DateTime      @default(now())
+  updatedAt      DateTime      @updatedAt
+
+  organization Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  user         User         @relation(fields: [userId], references: [id], onDelete: Cascade)
+  triggers     AlertTrigger[]
+
+  @@index([organizationId])
+  @@index([userId])
+}
+
+model AlertTrigger {
+  id          String   @id @default(cuid())
+  alertRuleId String
+  message     String   @db.Text
+  data        Json?
+  readAt      DateTime?
+  emailedAt   DateTime?
+  createdAt   DateTime @default(now())
+
+  alertRule AlertRule @relation(fields: [alertRuleId], references: [id], onDelete: Cascade)
+
+  @@index([alertRuleId])
+  @@index([createdAt])
+}
+
+// ============================================================================
+// AI LAYER
+// ============================================================================
+
+model AIAnalysis {
+  id             String  @id @default(cuid())
+  organizationId String
+  productId      String
+
+  overview             String? @db.Text
+  whyTrending          String? @db.Text
+  consumerProblem      String? @db.Text
+  targetAudience       String? @db.Text
+  buyerPsychology      String? @db.Text
+  marketMaturity       String? @db.Text
+  marketSaturation     String? @db.Text
+  majorCompetitors     Json?
+  supplierOpportunities Json?
+  potentialSellingPrice Decimal? @db.Decimal(10, 2)
+  expectedMargins      Decimal? @db.Decimal(5, 2)
+  brandPotential       String? @db.Text
+  advertisingPotential String? @db.Text
+  tiktokPotential      String? @db.Text
+  instagramPotential   String? @db.Text
+  metaAdsPotential     String? @db.Text
+  risks                String[] @default([])
+  launchRecommendation String? @db.Text
+  confidenceScore      Decimal? @db.Decimal(5, 2)
+
+  aiProvider AIProviderType
+  aiModel    String
+
+  createdAt DateTime @default(now())
+
+  organization Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  product      Product      @relation(fields: [productId], references: [id], onDelete: Cascade)
+
+  @@index([organizationId])
+  @@index([productId])
+}
+
+/// Generic container for AI-generated deliverables that don't need their own
+/// table (landing pages, brand kits already have models — this covers the
+/// rest: campaign plans, profitability models, store structures, etc).
+model GeneratedAsset {
+  id             String             @id @default(cuid())
+  organizationId String
+  productId      String?
+  type           GeneratedAssetType
+  title          String
+  content        Json
+  aiProvider     AIProviderType?
+  aiModel        String?
+  createdAt      DateTime           @default(now())
+
+  organization Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  product      Product?     @relation(fields: [productId], references: [id], onDelete: SetNull)
+
+  @@index([organizationId])
+  @@index([productId])
+  @@index([type])
+}
+
+/// Per-call cost tracking for AI Cost Management (spec section 44).
+model AIUsageEvent {
+  id             String   @id @default(cuid())
+  organizationId String
+  userId         String?
+  feature        String // e.g. "analyzeProduct", "generateCreative"
+  provider       AIProviderType
+  model          String
+  inputTokens    Int
+  outputTokens   Int
+  estimatedCostUsd Decimal @db.Decimal(10, 6)
+  createdAt      DateTime @default(now())
+
+  organization Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  user         User?        @relation(fields: [userId], references: [id], onDelete: SetNull)
+
+  @@index([organizationId, createdAt])
+  @@index([feature])
+}
+
+/// AI Agent conversation history (tool-calling assistant).
+model AgentMessage {
+  id             String   @id @default(cuid())
+  organizationId String
+  userId         String
+  threadId       String
+  role           String // user | assistant | tool
+  content        String   @db.Text
+  toolCalls      Json?
+  createdAt      DateTime @default(now())
+
+  organization Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  user         User         @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([organizationId, threadId, createdAt])
+}
+
+// ============================================================================
+// INTEGRATIONS, JOBS, OBSERVABILITY
+// ============================================================================
+
+/// Per-org connected external services: Shopify OAuth, Tiendanube OAuth, or
+/// an AI provider key override. Secrets are encrypted at rest (see lib/crypto).
+model Integration {
+  id             String            @id @default(cuid())
+  organizationId String
+  storeId        String?
+  provider       String // "shopify" | "tiendanube" | "openai" | "anthropic" | "google"
+  status         IntegrationStatus @default(NOT_CONFIGURED)
+  encryptedCredentials String?      @db.Text
+  metadata       Json?
+  connectedAt    DateTime?
+  lastSyncAt     DateTime?
+  lastError      String?
+  createdAt      DateTime          @default(now())
+  updatedAt      DateTime          @updatedAt
+
+  organization Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  store        Store?        @relation(fields: [storeId], references: [id], onDelete: SetNull)
+
+  @@unique([organizationId, provider, storeId])
+  @@index([organizationId])
+}
+
+model Job {
+  id             String    @id @default(cuid())
+  organizationId String?
+  sourceId       String?
+  type           JobType
+  status         JobStatus @default(QUEUED)
+  input          Json?
+  result         Json?
+  error          String?   @db.Text
+  attempts       Int       @default(0)
+  startedAt      DateTime?
+  finishedAt     DateTime?
+  durationMs     Int?
+  createdAt      DateTime  @default(now())
+
+  organization Organization?  @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  source       ProductSource? @relation(fields: [sourceId], references: [id], onDelete: SetNull)
+
+  @@index([organizationId, createdAt])
+  @@index([type, status])
+}
+
+model AuditLog {
+  id             String   @id @default(cuid())
+  organizationId String
+  userId         String?
+  action         String
+  entityType     String?
+  entityId       String?
+  metadata       Json?
+  createdAt      DateTime @default(now())
+
+  organization Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  user         User?        @relation(fields: [userId], references: [id], onDelete: SetNull)
+
+  @@index([organizationId, createdAt])
+  @@index([entityType, entityId])
+}
