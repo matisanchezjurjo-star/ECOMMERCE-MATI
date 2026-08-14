@@ -4,6 +4,7 @@ import { requireSession } from "@/lib/session";
 import { getConfiguredProviders } from "@/lib/ai/factory";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { SettingsForm } from "@/components/settings/settings-form";
+import { DemoDataButton } from "@/components/settings/demo-data-button";
 
 const PROVIDER_LABEL = { ANTHROPIC: "Anthropic (Claude)", OPENAI: "OpenAI (GPT)", GOOGLE: "Google (Gemini)" } as const;
 
@@ -58,6 +59,20 @@ export default async function SettingsPage() {
               )}
             </div>
           ))}
+        </CardContent>
+      </Card>
+
+      <Card>
+        <CardHeader>
+          <CardTitle>Demo Data</CardTitle>
+          <CardDescription>
+            Populate your workspace with 100+ synthetic products across every connected source — full history,
+            suppliers, competitors, and ads — so there&apos;s something to explore immediately. Everything it creates is
+            clearly labeled as demo data and never presented as live market data. Safe to run more than once.
+          </CardDescription>
+        </CardHeader>
+        <CardContent>
+          <DemoDataButton />
         </CardContent>
       </Card>
 
