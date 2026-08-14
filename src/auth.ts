@@ -7,6 +7,7 @@ import bcrypt from "bcryptjs";
 
 import { db } from "@/lib/db";
 import { ensureOrganizationForUser } from "@/lib/org";
+import { authConfig } from "@/auth.config";
 
 const providers: Provider[] = [
   Credentials({
@@ -43,30 +44,14 @@ if (process.env.AUTH_GOOGLE_ID && process.env.AUTH_GOOGLE_SECRET) {
 export const isGoogleAuthEnabled = Boolean(process.env.AUTH_GOOGLE_ID && process.env.AUTH_GOOGLE_SECRET);
 
 export const { handlers, auth, signIn, signOut } = NextAuth({
+  ...authConfig,
   // Credentials-based sign-in bypasses the adapter's user creation, so
   // sessions must be JWT-backed; the adapter still manages OAuth account
-  // linkage (Google) and session/verification-token bookkeeping.
+  // linkage (Google) and session/verification-token bookkeeping. This full
+  // config (adapter + providers) only runs in the Node runtime — never
+  // import this file from proxy.ts, which needs the edge-safe authConfig.
   adapter: PrismaAdapter(db) as ReturnType<typeof PrismaAdapter>,
-  session: { strategy: "jwt" },
-  // Self-hosted deployments (not Vercel) must opt in to trusting the
-  // incoming Host header — set behind a reverse proxy that sets it correctly.
-  trustHost: true,
   providers,
-  pages: {
-    signIn: "/login",
-  },
-  callbacks: {
-    async jwt({ token, user }) {
-      if (user?.id) token.sub = user.id;
-      return token;
-    },
-    async session({ session, token }) {
-      if (session.user && token.sub) {
-        session.user.id = token.sub;
-      }
-      return session;
-    },
-  },
   events: {
     async createUser({ user }) {
       // Fires for adapter-created users (Google OAuth sign-up). Credentials

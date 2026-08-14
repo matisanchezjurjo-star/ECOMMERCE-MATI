@@ -1,5 +1,11 @@
+import NextAuth from "next-auth";
 import { NextResponse } from "next/server";
-import { auth } from "@/auth";
+import { authConfig } from "@/auth.config";
+
+// Deliberately built from the edge-safe authConfig, not `@/auth` — this file
+// runs in the Edge runtime on every request, and `@/auth` pulls in the
+// Prisma adapter, `pg`, and bcrypt, none of which are Edge-compatible.
+const { auth } = NextAuth(authConfig);
 
 const PUBLIC_PATHS = ["/login", "/register"];
 
