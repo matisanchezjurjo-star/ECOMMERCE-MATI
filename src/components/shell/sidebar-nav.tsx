@@ -14,7 +14,7 @@ export function SidebarNav({ onNavigate }: { onNavigate?: () => void }) {
   return (
     <div className="flex h-full flex-col">
       <div className="flex h-14 shrink-0 items-center gap-2 px-4 text-sm font-semibold tracking-tight">
-        <div className="flex size-6 items-center justify-center rounded-md bg-foreground text-background">
+        <div className="flex size-6 items-center justify-center rounded-md bg-primary text-primary-foreground">
           <Mountain className="size-3.5" />
         </div>
         Cumbre

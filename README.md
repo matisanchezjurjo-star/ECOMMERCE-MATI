@@ -31,7 +31,7 @@ npm run db:seed           # generate demo data + a login you can use immediately
 npm run dev
 ```
 
-Demo login after seeding: `demo@ecomhunter.ai` / `demo12345`
+Demo login after seeding: `demo@cumbre.ai` / `demo12345`
 
 ### Required environment variables
 
@@ -135,10 +135,14 @@ This repo follows the phased build order from the product spec:
 - **Phase 2 (partial):** discovery adapters for the easiest/most reliable sources are
   wired (in demo mode pending credentials); supplier search and brand generation are
   live from the product detail page and Brand Builder.
-- **Phase 3–5:** competitor intelligence engine, ad intelligence feed, creative
-  studio, and Shopify/Tiendanube store publishing are scaffolded (schema + nav +
-  honest "planned" pages) but not yet built out — see the in-app pages for exactly
-  what's implemented vs. planned.
+- **Phase 4 (partial):** Brand Builder and Creative Studio are live — AI brand
+  identity and short-form video script generation (TikTok/Reels/UGC, engine-specific
+  prompts) tuned toward a premium single-hero-product DTC playbook for the
+  Argentina/LatAm market.
+- **Phase 3, 5:** competitor intelligence engine, ad intelligence feed, and
+  Shopify/Tiendanube store publishing are scaffolded (schema + nav + honest
+  "planned" pages) but not yet built out — see the in-app pages for exactly what's
+  implemented vs. planned.
 
 ## Demo data
 

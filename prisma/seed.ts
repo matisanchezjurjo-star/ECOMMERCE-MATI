@@ -10,7 +10,7 @@ import bcrypt from "bcryptjs";
 import { db } from "../src/lib/db";
 import { populateDemoDataForOrg } from "../src/lib/discovery/populate-demo-data";
 
-const DEMO_EMAIL = "demo@ecomhunter.ai";
+const DEMO_EMAIL = "demo@cumbre.ai";
 const DEMO_PASSWORD = "demo12345";
 
 async function main() {
