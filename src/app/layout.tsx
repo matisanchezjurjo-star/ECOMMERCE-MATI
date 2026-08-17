@@ -16,9 +16,9 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "EcomHunter AI — Autonomous Ecommerce Intelligence",
+  title: "Cumbre — Alto rendimiento emprendedor",
   description:
-    "Discover, score, and launch winning ecommerce products with an AI research and execution agent.",
+    "Descubrí, evaluá y lanzá productos ganadores de ecommerce con un agente de investigación y ejecución impulsado por IA.",
 };
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {

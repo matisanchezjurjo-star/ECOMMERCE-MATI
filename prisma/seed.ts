@@ -14,7 +14,7 @@ const DEMO_EMAIL = "demo@ecomhunter.ai";
 const DEMO_PASSWORD = "demo12345";
 
 async function main() {
-  console.log("Seeding EcomHunter AI demo data...\n");
+  console.log("Seeding Cumbre demo data...\n");
 
   const organization = await db.organization.upsert({
     where: { slug: "demo-workspace" },

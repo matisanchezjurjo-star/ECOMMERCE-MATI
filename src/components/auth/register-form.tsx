@@ -38,23 +38,23 @@ export function RegisterForm() {
         </Alert>
       )}
       <div className="flex flex-col gap-1.5">
-        <Label htmlFor="name">Full name</Label>
+        <Label htmlFor="name">Nombre completo</Label>
         <Input id="name" name="name" placeholder="Ada Lovelace" required autoComplete="name" />
         {state.fieldErrors?.name && <p className="text-xs text-destructive">{state.fieldErrors.name}</p>}
       </div>
       <div className="flex flex-col gap-1.5">
         <Label htmlFor="email">Email</Label>
-        <Input id="email" name="email" type="email" placeholder="you@company.com" required autoComplete="email" />
+        <Input id="email" name="email" type="email" placeholder="vos@empresa.com" required autoComplete="email" />
         {state.fieldErrors?.email && <p className="text-xs text-destructive">{state.fieldErrors.email}</p>}
       </div>
       <div className="flex flex-col gap-1.5">
-        <Label htmlFor="password">Password</Label>
+        <Label htmlFor="password">Contraseña</Label>
         <Input id="password" name="password" type="password" required autoComplete="new-password" minLength={8} />
         {state.fieldErrors?.password && <p className="text-xs text-destructive">{state.fieldErrors.password}</p>}
       </div>
       <Button type="submit" disabled={pending} className="mt-1">
         {pending && <Loader2 className="animate-spin" />}
-        Create account
+        Crear cuenta
       </Button>
     </form>
   );

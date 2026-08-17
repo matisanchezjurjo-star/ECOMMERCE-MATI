@@ -1,4 +1,4 @@
-# EcomHunter AI
+# Cumbre
 
 Autonomous ecommerce intelligence and execution platform. Discovers products across
 marketplaces, social platforms, and ad libraries; scores them with a transparent,

@@ -12,9 +12,9 @@ export default async function OnboardingPage() {
   return (
     <div className="mx-auto flex min-h-svh max-w-2xl flex-col justify-center gap-8 px-4 py-16">
       <div>
-        <h1 className="text-2xl font-semibold tracking-tight">Let&apos;s personalize EcomHunter AI</h1>
+        <h1 className="text-2xl font-semibold tracking-tight">Personalicemos Cumbre</h1>
         <p className="mt-1 text-sm text-muted-foreground">
-          A few quick questions so we never ask twice — the AI Agent remembers these preferences everywhere in the app.
+          Unas pocas preguntas rápidas para no volver a pedírtelas — el Agente IA recuerda estas preferencias en toda la app.
         </p>
       </div>
       <OnboardingForm />

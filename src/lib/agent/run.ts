@@ -101,7 +101,7 @@ function buildDecisionPrompt(
     ? `Known user preferences (do not ask for these again): target countries ${settings.targetCountries.join(", ") || "unspecified"}; preferred categories ${settings.preferredCategories.join(", ") || "unspecified"}; business model ${settings.businessModel}; risk tolerance ${settings.riskTolerance}.`
     : "No saved preferences yet.";
 
-  return `You are the AI Agent inside EcomHunter AI, an ecommerce product-research platform. You have access to these tools:
+  return `You are the AI Agent inside Cumbre, an ecommerce product-research and brand-building platform for entrepreneurs. You have access to these tools:
 ${TOOLS_DESCRIPTION}
 
 ${prefs}

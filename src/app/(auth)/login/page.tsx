@@ -9,17 +9,17 @@ export default function LoginPage() {
   return (
     <Card>
       <CardHeader>
-        <CardTitle className="text-xl">Welcome back</CardTitle>
-        <CardDescription>Sign in to your EcomHunter AI workspace.</CardDescription>
+        <CardTitle className="text-xl">Bienvenido de nuevo</CardTitle>
+        <CardDescription>Iniciá sesión en tu espacio de trabajo de Cumbre.</CardDescription>
       </CardHeader>
       <CardContent className="flex flex-col gap-6">
         <Suspense>
           <LoginForm googleEnabled={isGoogleAuthEnabled} />
         </Suspense>
         <p className="text-center text-sm text-muted-foreground">
-          Don&apos;t have an account?{" "}
+          ¿No tenés una cuenta?{" "}
           <Link href="/register" className="font-medium text-foreground underline underline-offset-4">
-            Sign up
+            Registrate
           </Link>
         </p>
       </CardContent>

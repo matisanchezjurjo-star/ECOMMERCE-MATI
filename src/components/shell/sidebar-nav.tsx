@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { Zap } from "lucide-react";
+import { Mountain } from "lucide-react";
 
 import { cn } from "@/lib/utils";
 import { NAV_ITEMS } from "./nav-items";
@@ -15,9 +15,9 @@ export function SidebarNav({ onNavigate }: { onNavigate?: () => void }) {
     <div className="flex h-full flex-col">
       <div className="flex h-14 shrink-0 items-center gap-2 px-4 text-sm font-semibold tracking-tight">
         <div className="flex size-6 items-center justify-center rounded-md bg-foreground text-background">
-          <Zap className="size-3.5" />
+          <Mountain className="size-3.5" />
         </div>
-        EcomHunter AI
+        Cumbre
       </div>
       <nav className="flex-1 space-y-0.5 overflow-y-auto px-2 py-2 scrollbar-thin">
         {NAV_ITEMS.map((item) => {
@@ -39,7 +39,7 @@ export function SidebarNav({ onNavigate }: { onNavigate?: () => void }) {
               <span className="flex-1 truncate">{item.label}</span>
               {item.comingSoon && (
                 <Badge variant="outline" className="px-1 py-0 text-[10px] font-normal text-muted-foreground">
-                  soon
+                  pronto
                 </Badge>
               )}
             </Link>

@@ -31,7 +31,7 @@ export function LoginForm({ googleEnabled }: { googleEnabled: boolean }) {
 
     setLoading(null);
     if (result?.error) {
-      setError("Invalid email or password");
+      setError("Email o contraseña incorrectos");
       return;
     }
     window.location.href = result?.url ?? callbackUrl;
@@ -47,15 +47,15 @@ export function LoginForm({ googleEnabled }: { googleEnabled: boolean }) {
         )}
         <div className="flex flex-col gap-1.5">
           <Label htmlFor="email">Email</Label>
-          <Input id="email" name="email" type="email" placeholder="you@company.com" required autoComplete="email" />
+          <Input id="email" name="email" type="email" placeholder="vos@empresa.com" required autoComplete="email" />
         </div>
         <div className="flex flex-col gap-1.5">
-          <Label htmlFor="password">Password</Label>
+          <Label htmlFor="password">Contraseña</Label>
           <Input id="password" name="password" type="password" required autoComplete="current-password" />
         </div>
         <Button type="submit" disabled={loading !== null} className="mt-1">
           {loading === "credentials" && <Loader2 className="animate-spin" />}
-          Sign in
+          Iniciar sesión
         </Button>
       </form>
 
@@ -63,7 +63,7 @@ export function LoginForm({ googleEnabled }: { googleEnabled: boolean }) {
         <>
           <div className="flex items-center gap-3 text-xs text-muted-foreground">
             <div className="h-px flex-1 bg-border" />
-            OR
+            O
             <div className="h-px flex-1 bg-border" />
           </div>
           <Button
@@ -76,7 +76,7 @@ export function LoginForm({ googleEnabled }: { googleEnabled: boolean }) {
             }}
           >
             {loading === "google" && <Loader2 className="animate-spin" />}
-            Continue with Google
+            Continuar con Google
           </Button>
         </>
       )}
