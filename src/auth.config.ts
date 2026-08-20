@@ -10,6 +10,11 @@ import type { NextAuthConfig } from "next-auth";
  * the Node runtime (route handlers, server actions).
  */
 export const authConfig: NextAuthConfig = {
+  // Passed explicitly rather than relying on Auth.js's automatic
+  // AUTH_SECRET pickup — the Edge runtime doesn't always see the same
+  // environment as the Node runtime, and a silent auto-detection miss
+  // there fails every request (the Edge middleware runs on all of them).
+  secret: process.env.AUTH_SECRET,
   pages: {
     signIn: "/login",
   },
